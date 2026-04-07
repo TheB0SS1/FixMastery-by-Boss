@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FixMastery by Boss - Dental Exams</title>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --primary-green: #2e7d32; /* Professional Forest Green */
+            --light-green: #e8f5e9;
+            --accent-green: #66bb6a;
+            --text-brown: #3e2723; /* Deep Brown for readability */
+            --text-body: #5d4037;
+            --white: #ffffff;
+            --error-red: #c62828;
+            --light-red: #ffebee;
+            --border-color: #d7ccc8;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: #f4f6f4;
+            color: var(--text-brown);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background-color: var(--primary-green);
+            color: var(--white);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            z-index: 100;
+            height: 60px;
+        }
+
+        .brand {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand span {
+            color: #a5d6a7;
+            font-weight: 400;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-back {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.3); }
+
+        .stats-bar {
+            display: flex;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.1);
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .timer-warning { color: #ffcc80; animation: pulse 1s infinite; }
+
+        /* --- MAIN VIEWS --- */
+        #home-view, #quiz-view {
+            flex: 1;
+            display: none; /* Toggled via JS */
+            flex-direction: column;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        .active-view { display: flex !important; }
+
+        /* --- HOME VIEW (LECTURE SELECTION) --- */
+        .home-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 2rem;
+            max-width: 600px;
+        }
+        .welcome-text h2 { font-size: 1.8rem; color: var(--primary-green); margin-bottom: 0.5rem; }
+        .welcome-text p { color: var(--text-body); opacity: 0.8; }
+
+        .lectures-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .lecture-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            border-top: 6px solid var(--primary-green);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lecture-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(46, 125, 50, 0.15);
+        }
+
+        .lecture-number {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--light-green);
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            opacity: 0.5;
+        }
+
+        .lecture-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-brown);
+            margin-bottom: 0.5rem;
+            z-index: 1;
+        }
+
+        .lecture-desc {
+            font-size: 0.9rem;
+            color: var(--text-body);
+            margin-bottom: 1.5rem;
+            z-index: 1;
+            line-height: 1.4;
+        }
+
+        .lecture-status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary-green);
+            background: var(--light-green);
+            padding: 5px 10px;
+            border-radius: 10px;
+            align-self: flex-start;
+            z-index: 1;
+        }
+
+        /* --- QUIZ VIEW --- */
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .quiz-area {
+            flex: 3;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            height: 5px;
+            border-radius: 3px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-green);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            width: 100%;
+            border-top: 5px solid var(--primary-green);
+        }
+
+        .q-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            color: var(--primary-green);
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .q-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-brown);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            font-size: 0.95rem;
+            color: var(--text-body);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            font-family: inherit;
+            line-height: 1.4;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary-green);
+            background-color: var(--light-green);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled { cursor: default; opacity: 0.8; }
+
+        .option-btn.correct {
+            border-color: var(--primary-green);
+            background-color: var(--light-green);
+            color: var(--primary-green);
+            font-weight: 600;
+            box-shadow: 0 0 0 1px var(--primary-green);
+        }
+
+        .option-btn.wrong {
+            border-color: var(--error-red);
+            background-color: var(--light-red);
+            color: var(--error-red);
+        }
+
+        .explanation-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #f1f8e9;
+            border-left: 4px solid var(--primary-green);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-body);
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .explanation-box strong { color: var(--primary-green); display: block; margin-bottom: 4px; }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            flex: 1;
+            background-color: var(--white);
+            border-left: 1px solid var(--border-color);
+            padding: 1rem;
+            overflow-y: auto;
+            min-width: 250px;
+            max-width: 350px;
+        }
+
+        .nav-header {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-brown);
+            border-bottom: 2px solid var(--light-green);
+            padding-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+            gap: 8px;
+        }
+
+        .nav-btn {
+            width: 35px;
+            height: 35px;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-body);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover { border-color: var(--primary-green); transform: scale(1.1); }
+        .nav-btn.active { background-color: var(--primary-green); color: var(--white); border-color: var(--primary-green); }
+        .nav-btn.correct-answered { background-color: var(--primary-green); color: var(--white); opacity: 0.6; }
+        .nav-btn.wrong-answered { background-color: var(--error-red); color: var(--white); opacity: 0.6; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            header { padding: 0.8rem 1rem; }
+            .brand { font-size: 1.1rem; }
+            .btn-back span { display: none; } /* Hide text, keep icon */
+            .app-container { flex-direction: column; }
+            .sidebar { 
+                border-left: none; 
+                border-top: 1px solid var(--border-color);
+                height: 120px;
+                flex: none;
+            }
+            .question-card { padding: 1.5rem; }
+            .q-text { font-size: 1.05rem; }
+            .lectures-grid { grid-template-columns: 1fr; } /* Stack cards on mobile */
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            FixMastery <span>by Boss</span>
+        </div>
+        <div class="header-controls">
+            <div class="stats-bar">
+                <span id="timer-display">01:00</span>
+                <span id="score-display">0 / 0</span>
+            </div>
+            <button class="btn-back hidden" id="btn-back" onclick="goHome()">
+                &#8592; <span>Menu</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- HOME VIEW: LECTURE SELECTION -->
+    <main id="home-view" class="active-view">
+        <div class="home-container">
+            <div class="welcome-text">
+                <h2>Welcome Back, Boss</h2>
+                <p>Select a lecture to begin your mastery session.</p>
+            </div>
+            <div class="lectures-grid" id="lectures-grid">
+                <!-- Cards injected via JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- QUIZ VIEW -->
+    <main id="quiz-view">
+        <div class="app-container">
+            <div class="quiz-area" id="quiz-container">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+
+                <div class="question-card" id="question-card">
+                    <div class="q-header">
+                        <span id="lecture-label">Lecture 1</span>
+                        <span id="question-number">Q1</span>
+                    </div>
+                    <div class="q-text" id="question-text">
+                        Loading Question...
+                    </div>
+                    
+                    <div class="options-grid" id="options-container"></div>
+
+                    <div class="explanation-box" id="explanation-box">
+                        <strong>Explanation:</strong>
+                        <span id="explanation-text"></span>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="nav-header">Questions Navigator</div>
+                <div class="nav-grid" id="nav-grid"></div>
+            </aside>
+        </div>
+    </main>
+
+    <script>
+        /* --- DATASET: 4 LECTURES, 45 QUESTIONS EACH --- */
+        
+        const lecturesData = [
+            {
+                id: 1,
+                title: "Study Casts, Working Casts & Dies",
+                desc: "Master cast requirements, die materials (gypsum, epoxy, electroplated), and soft tissue reproduction.",
+                questions: [
+                    { q: "A working cast must be an accurate replica of all of the following EXCEPT:", o: ["Prepared teeth", "Ridge areas", "Opposing dentition", "Dental arch"], c: "Opposing dentition", e: "Working cast replicates prepared teeth, ridge areas, dental arch, and relevant oral structures – opposing dentition is not mentioned." },
+                    { q: "Which of the following is an ideal requirement of a working cast?", o: ["Reproduce only prepared tooth surfaces", "Reproduce all details in the impression with no defects", "Be made within 5 minutes", "Be disposable after one use"], c: "Reproduce all details in the impression with no defects", e: "Ideal requirements: reproduce all details in the impression with no defects." },
+                    { q: "A working cast must accurately reproduce which two types of tooth surfaces?", o: ["Mesial and distal only", "Buccal and lingual only", "Prepared and unprepared tooth surfaces", "Occlusal and cervical only"], c: "Prepared and unprepared tooth surfaces", e: "Ideal requirements: accurately reproduce prepared AND unprepared tooth surfaces." },
+                    { q: "Which statement about soft tissue reproduction on a working cast is TRUE?", o: ["Soft tissue reproduction is optional", "All soft tissues must be accurately reproduced", "Only gingival margins need reproduction", "Soft tissues are not reproduced on working casts"], c: "All soft tissues must be accurately reproduced", e: "Ideal requirements: accurately reproduce all soft tissues." },
+                    { q: "A working cast is also known as a:", o: ["Diagnostic cast", "Master cast", "Preliminary cast", "Study cast"], c: "Master cast", e: "Working (Master) Cast is the heading." },
+                    { q: "The main use of a working cast is for:", o: ["Patient education only", "Diagnosis only", "Clinical and laboratory procedures", "Orthodontic records only"], c: "Clinical and laboratory procedures", e: "Main use: used for clinical and laboratory procedures." },
+                    { q: "A study cast is obtained by pouring which impression material?", o: ["Rubber base", "Alginate", "Silicone", "Polyether"], c: "Alginate", e: "Study cast: obtained by pouring the alginate impression." },
+                    { q: "A working cast is obtained by pouring which impression material?", o: ["Alginate", "Agar", "Rubber impression", "Plaster"], c: "Rubber impression", e: "Working cast: obtained by pouring the rubber impression." },
+                    { q: "A study cast uses which material?", o: ["Improved stone", "Epoxy resin", "Gypsum", "Metal"], c: "Gypsum", e: "Study cast material used: Gypsum." },
+                    { q: "A working cast uses which material?", o: ["Alginate", "Plaster", "Stone", "Wax"], c: "Stone", e: "Working cast material used: Stone." },
+                    { q: "Which cast is less accurate?", o: ["Working cast", "Master cast", "Study cast", "Removable die cast"], c: "Study cast", e: "Study cast: less accurate. Working cast: more accurate." },
+                    { q: "Which cast reproduces fine and precise details?", o: ["Study cast", "Working cast", "Diagnostic cast", "Preliminary cast"], c: "Working cast", e: "Working cast: fine & precise details. Study cast: basic anatomical details." },
+                    { q: "A die is defined as:", o: ["A negative reproduction of a tooth", "A positive reproduction of a prepared tooth", "A copy of the opposing arch", "A wax pattern of a crown"], c: "A positive reproduction of a prepared tooth", e: "Die definition: a positive reproduction of a prepared tooth, made from a hard substance with high accuracy." },
+                    { q: "Which materials are used to make dies?", o: ["Alginate and plaster", "Improved stone, resin, and metal", "Wax and rubber", "Agar and silicone"], c: "Improved stone, resin, and metal", e: "Die materials used: Improved stone, Resin, Metal." },
+                    { q: "An ideal die must reproduce the prepared tooth exactly with:", o: ["Some air bubbles allowed", "No air bubbles or voids", "Voids allowed only on margins", "Air bubbles acceptable on occlusal surface"], c: "No air bubbles or voids", e: "Ideal requirements: No air bubbles or voids." },
+                    { q: "The unprepared tooth structure cervical to the finish line must be clearly visible. The IDEAL visible distance is:", o: ["0.1 mm", "0.3 mm", "0.5 mm", "1.0 mm"], c: "1.0 mm", e: "Ideally 1 mm visible." },
+                    { q: "The MINIMUM acceptable visible unprepared tooth structure cervical to the finish line is:", o: ["0.1 mm", "0.3 mm", "0.5 mm", "1.0 mm"], c: "0.5 mm", e: "Minimum acceptable: 0.5 mm." },
+                    { q: "Dental gypsum products are available in how many ADA types?", o: ["2 types", "3 types", "4 types", "5 types"], c: "4 types", e: "Dental gypsum products available in four ADA types (I-IV)." },
+                    { q: "Which is an advantage of gypsum as a die material?", o: ["High abrasion resistance", "Inexpensive and easy to use", "Extremely expensive", "Incompatible with most impressions"], c: "Inexpensive and easy to use", e: "Gypsum: inexpensive, easy to use, good surface detail reproduction." },
+                    { q: "What is the MAIN disadvantage of gypsum as a die material?", o: ["High cost", "Poor abrasion resistance", "Difficult manipulation", "Poor detail reproduction"], c: "Poor abrasion resistance", e: "Gypsum: poor abrasion resistance." },
+                    { q: "The solution to improve abrasion resistance of gypsum is to add:", o: ["More water", "Colloidal silica", "Sodium chloride", "Calcium sulfate"], c: "Colloidal silica", e: "Gypsum hardeners (colloidal silica) improve abrasion resistance." },
+                    { q: "Resin die materials overcome which disadvantages of stone?", o: ["High cost and poor detail", "Low strength and poor abrasion resistance", "Poor color and high expansion", "Slow setting and low strength"], c: "Low strength and poor abrasion resistance", e: "Resin overcomes low strength & abrasion resistance of stone." },
+                    { q: "Which types of resin are used for dies?", o: ["Acrylic and silicone", "Epoxy resin and polyurethane", "Polyester and nylon", "Polyethylene and polypropylene"], c: "Epoxy resin and polyurethane", e: "Resin types: Epoxy resin and Polyurethane." },
+                    { q: "Epoxy resin dies cure at what temperature?", o: ["High temperature", "Room temperature", "Below freezing", "Boiling temperature"], c: "Room temperature", e: "Epoxy resin cures at room temperature." },
+                    { q: "Epoxy resin has much higher abrasion resistance than gypsum, but what is its disadvantage?", o: ["Poor detail reproduction", "More expensive and undergoes polymerization shrinkage", "Difficult to manipulate", "Incompatible with silicone"], c: "More expensive and undergoes polymerization shrinkage", e: "Epoxy resin: more expensive, undergoes polymerization shrinkage." },
+                    { q: "Epoxy resin dies are compatible with which impression materials?", o: ["Polysulfide and hydrocolloid", "Silicone and polyether", "Alginate and agar", "All impression materials"], c: "Silicone and polyether", e: "Epoxy resin: compatible with silicone & polyether." },
+                    { q: "Epoxy resin dies are NOT compatible with:", o: ["Silicone", "Polyether", "Polysulfide and hydrocolloid", "Addition silicone"], c: "Polysulfide and hydrocolloid", e: "Epoxy resin: not compatible with polysulfide & hydrocolloid." },
+                    { q: "Electroplated dies are used primarily to overcome:", o: ["High cost of gypsum", "Poor abrasion resistance of gypsum", "Poor detail of resin", "Shrinkage of epoxy"], c: "Poor abrasion resistance of gypsum", e: "Electroplated die used to overcome poor abrasion resistance of gypsum." },
+                    { q: "In electroplating technique, the impression is first coated with:", o: ["Water and soap", "Silver or graphite powder", "Wax and oil", "Gypsum slurry"], c: "Silver or graphite powder", e: "Impression coated with silver or graphite powder to become conductive." },
+                    { q: "After coating with conductive powder, the impression is placed in:", o: ["Oven", "Electroplating bath", "Water bath", "Vacuum chamber"], c: "Electroplating bath", e: "Placed in electroplating bath." },
+                    { q: "The deposited metal layer on an electroplated die is supported with:", o: ["Only wax", "Type IV stone or resin", "Only alginate", "Only plaster"], c: "Type IV stone or resin", e: "Supported with Type IV stone or resin." },
+                    { q: "Electroplating requires approximately how long to form a cohesive metal layer?", o: ["1 hour", "4 hours", "8 hours", "24 hours"], c: "8 hours", e: "About 8 hours for cohesive metal layer." },
+                    { q: "Which impression material is difficult to electroplate due to low surface energy?", o: ["Polysulfide", "Polyether", "Silicone", "Hydrocolloid"], c: "Silicone", e: "Silicone has low surface energy, difficult to electroplate." },
+                    { q: "Which impression material causes distortion during electroplating because it is hydrophilic?", o: ["Silicone", "Polyether", "Polysulfide", "Alginate"], c: "Polyether", e: "Polyether is hydrophilic → distortion." },
+                    { q: "The major drawback of electroplated dies is:", o: ["Low accuracy", "Poor detail reproduction", "Cyanide solution toxicity", "High cost of equipment"], c: "Cyanide solution toxicity", e: "Major drawback: Cyanide solution toxicity." },
+                    { q: "Which die selection criterion requires the die to resist scratching during wax carving?", o: ["Dimensional stability", "Surface hardness", "Wax wetting", "Compatibility"], c: "Surface hardness", e: "Surface hardness: resists scratching and abrasion." },
+                    { q: "The die must be easily wetted by wax. This describes which selection criterion?", o: ["Surface hardness", "Dimensional stability", "Wax wetting", "Strength"], c: "Wax wetting", e: "Wax wetting: easily wetted by wax." },
+                    { q: "A die must contrast in color with wax for:", o: ["Esthetic purposes only", "Clear margin visibility", "Faster setting", "Lower cost"], c: "Clear margin visibility", e: "Color: contrasts with wax → clear margin visibility." },
+                    { q: "Which die selection criterion requires high mechanical strength?", o: ["To resist fracture or destruction", "To improve color", "To reduce cost", "To speed fabrication"], c: "To resist fracture or destruction", e: "Strength: high mechanical strength to resist fracture or destroyed." },
+                    { q: "Which is an advantage of working cast with separate die?", o: ["Easy transfer of complex wax patterns", "Easy fabrication and maintains fixed abutment relationship", "No risk of distortion", "Works with all impression materials"], c: "Easy fabrication and maintains fixed abutment relationship", e: "Advantages: easy fabrication, maintains fixed abutment relationship, acts as guide." },
+                    { q: "In separate die technique, the wax pattern may not seat accurately because:", o: ["Wax is too soft", "The second pour is slightly larger than the first", "Die is too hard", "Impression material is alginate"], c: "The second pour is slightly larger than the first", e: "Reason: the second pour is slightly larger than the first." },
+                    { q: "The solution for improper wax pattern seating in separate die technique is:", o: ["Remake the entire cast", "Slight stone relief before occlusal evaluation", "Use more die lubricant", "Heat the wax pattern"], c: "Slight stone relief before occlusal evaluation", e: "Solution: slight stone relief before occlusal evaluation." },
+                    { q: "Which is a requirement of working cast with removable die?", o: ["Dies can be placed in any position", "Dies must return to exact original position", "Dies must be removable with difficulty", "Cast cannot be mounted on articulator"], c: "Dies must return to exact original position", e: "Requirements: dies must return to exact original position." },
+                    { q: "What is the main disadvantage of working cast with removable die?", o: ["High cost of materials", "Risk of error if die does not reseat accurately", "Cannot be used for crowns", "Only works with alginate"], c: "Risk of error if die does not reseat accurately", e: "Disadvantage: risk of error if die does not reseat accurately." },
+                    { q: "In removable die systems, dies must remain stable even when:", o: ["Wet", "Inverted", "Heated", "Cut"], c: "Inverted", e: "Dies must remain stable even when inverted." }
+                ]
+            },
+            {
+                id: 2,
+                title: "Spruing of Wax Pattern",
+                desc: "Sprue formers, channels, dimensions, angles, reservoirs, and casting rings.",
+                questions: [
+                    { q: "The process of casting consists of surrounding the wax pattern with investment, eliminating wax by heating, AND:", o: ["Polishing the metal", "Introducing molten metal through a sprue", "Removing the die", "Adding more wax"], c: "Introducing molten metal through a sprue", e: "Casting: surrounding wax pattern with investment, eliminating wax (burnout), introducing molten metal through sprue." },
+                    { q: "A sprue former is defined as:", o: ["A tool for carving wax", "A wax, plastic, or metal pattern used to provide a channel in investment material", "A type of impression material", "A laboratory knife"], c: "A wax, plastic, or metal pattern used to provide a channel in investment material", e: "Sprue former: wax, plastic or metal pattern used to provide a channel in investment material." },
+                    { q: "The sprue channel is the pathway between:", o: ["Wax and investment", "Crucible and mold cavity", "Ring and liner", "Die and wax"], c: "Crucible and mold cavity", e: "Sprue channel: pathway between crucible and mold cavity." },
+                    { q: "The sprue channel allows molten wax to escape during burnout AND:", o: ["Prevents metal flow", "Allows molten metal to reach the mold space", "Cools the mold", "Hardens the investment"], c: "Allows molten metal to reach the mold space", e: "Sprue channel allows molten wax escape AND molten metal to reach mold space." },
+                    { q: "Which is a basic requirement of the sprue former?", o: ["Prevent molten wax from escaping", "Allow molten wax to escape AND molten metal to flow in", "Solidify before the alloy", "Be made only of metal"], c: "Allow molten wax to escape AND molten metal to flow in", e: "Requirements: allow molten wax escape, enable molten metal to flow in." },
+                    { q: "The metal within the sprue must remain molten slightly longer than the alloy that filled the mold to:", o: ["Prevent shrinkage porosity", "Allow feeding of molten metal", "Speed cooling", "Reduce investment cracking"], c: "Allow feeding of molten metal", e: "Metal within sprue must remain molten slightly longer to feed the casting." },
+                    { q: "Direct spruing means the sprue is:", o: ["Curved", "Directed toward the pattern without deviations", "Placed at 90 degrees", "Removed before casting"], c: "Directed toward the pattern without deviations", e: "Direct spruing: sprue directed towards pattern without deviations." },
+                    { q: "Indirect spruing uses a runner bar and goes through:", o: ["No angles", "Different angles along its path", "Only 90-degree angles", "Only 180-degree angles"], c: "Different angles along its path", e: "Indirect spruing: sprue goes through different angles using a runner bar." },
+                    { q: "According to the number of sprues used, which is a spruing method?", o: ["Circular spruing", "Single spruing", "Vertical spruing", "Horizontal spruing"], c: "Single spruing", e: "Number of sprues: single spruing, double spruing, multiple spruing." },
+                    { q: "Which type of sprue former is PREFERRED?", o: ["Metal sprue former", "Plastic sprue former", "Wax sprue former", "Rubber sprue former"], c: "Wax sprue former", e: "Wax sprue former (preferred)." },
+                    { q: "Wax sprue formers melt at the same rate as the wax pattern, which allows:", o: ["Faster cooling", "Easy escape of molten wax during burnout", "Stronger casting", "Better color"], c: "Easy escape of molten wax during burnout", e: "Wax sprue melts at same rate as pattern → allows easy escape of molten wax." },
+                    { q: "Solid plastic sprues soften at a higher temperature than wax, which may cause:", o: ["Better wax flow", "Blocking wax escape OR wax overheating eroding mold surface", "Faster burnout", "Stronger mold"], c: "Blocking wax escape OR wax overheating eroding mold surface", e: "Solid plastic sprues may block wax escape or cause wax overheating, eroding mold surface." },
+                    { q: "Metal sprue formers should be made of non-rusting metal to:", o: ["Reduce cost", "Avoid contamination of wax", "Increase strength", "Improve melting"], c: "Avoid contamination of wax", e: "Metal sprue former should be non-rusting to avoid wax contamination." },
+                    { q: "Metal sprue formers are usually removed from the investment:", o: ["After burnout", "Before wax burnout (with crucible former)", "After casting", "Never removed"], c: "Before wax burnout (with crucible former)", e: "Metal sprues removed before wax burnout." },
+                    { q: "Small particles of investment that break off when a metal sprue is removed can cause:", o: ["Better casting", "Incomplete casting if undetectable", "Faster burnout", "Smoother surface"], c: "Incomplete casting if undetectable", e: "Investment particles can cause incomplete casting if undetectable." },
+                    { q: "A relatively large diameter sprue is recommended because it improves molten metal flow AND:", o: ["Reduces metal use", "Ensures a reservoir during solidification", "Speeds cooling", "Prevents all porosity"], c: "Ensures a reservoir during solidification", e: "Large diameter improves flow and ensures reservoir during solidification." },
+                    { q: "The recommended sprue diameter for a molar crown pattern is:", o: ["1 mm", "1.5 mm", "2.5 mm (10 gauge)", "4 mm"], c: "2.5 mm (10 gauge)", e: "2.5 mm (10 gauge) sprue for molar and metal ceramic patterns." },
+                    { q: "The recommended sprue diameter for a premolar restoration is:", o: ["1 mm", "2 mm", "2.5 mm", "3 mm"], c: "2 mm", e: "2 mm sprue for premolar and partial coverage restorations." },
+                    { q: "The average sprue length is:", o: ["2 mm", "4 mm", "6 mm", "10 mm"], c: "6 mm", e: "Average sprue length = 6 mm." },
+                    { q: "For gypsum-bonded investment, the distance between pattern and ring top (investment bridge) should be:", o: ["1-2 mm", "3-4 mm", "6-8 mm", "10-12 mm"], c: "6-8 mm", e: "Gypsum-bonded investment: 6-8 mm distance." },
+                    { q: "For phosphate-bonded investment, the distance between pattern and ring top should be:", o: ["1-2 mm", "3-4 mm", "6-8 mm", "8-10 mm"], c: "3-4 mm", e: "Phosphate-bonded investment: 3-4 mm distance." },
+                    { q: "If the sprue is too long, what casting defect occurs?", o: ["Surface roughness", "Incomplete casting or porosity in bulkiest part", "Wax expansion", "Mold cracking"], c: "Incomplete casting or porosity in bulkiest part", e: "Sprue too long: metal solidifies before filling mold → incomplete casting or porosity." },
+                    { q: "If the sprue is too short, what defect occurs?", o: ["Faster filling", "Back pressure porosity", "Stronger casting", "Better margins"], c: "Back pressure porosity", e: "Sprue too short: gases cannot escape → back pressure porosity." },
+                    { q: "The sprue should be attached to which part of the wax pattern?", o: ["The thinnest part", "The bulkiest part (usually the non-functional cusp)", "The margin", "The proximal surface"], c: "The bulkiest part (usually the non-functional cusp)", e: "Sprue attaches to bulkiest part (usually non-functional cusp)." },
+                    { q: "The point of sprue attachment should permit a stream of metal to be directed to:", o: ["Only the occlusal surface", "All parts of the mold", "Only the margin", "Only the proximal surface"], c: "All parts of the mold", e: "Sprue must direct metal stream to all parts of the mold." },
+                    { q: "Incorrect sprue placement in the central fossa may:", o: ["Strengthen the casting", "Obliterate occlusal anatomy and result in poor mold filling", "Improve metal flow", "Reduce porosity"], c: "Obliterate occlusal anatomy and result in poor mold filling", e: "Central fossa sprue obliterates occlusal anatomy and causes poor mold filling." },
+                    { q: "A sprue should be placed at what angulation near the bulk of the pattern?", o: ["90 degrees", "45 degrees", "180 degrees", "0 degrees"], c: "45 degrees", e: "Sprue placed at 45° angulation." },
+                    { q: "The 45-degree sprue angulation helps to prevent:", o: ["Metal flow", "Air entrapment during investing", "Wax escape", "Investment expansion"], c: "Air entrapment during investing", e: "45° placement prevents air entrapment during investing." },
+                    { q: "Venting involves the use of thin auxiliary sprues to help gases escape AND:", o: ["Add more metal", "Ensure casting solidifies in critical areas", "Increase pattern weight", "Slow down casting"], c: "Ensure casting solidifies in critical areas", e: "Venting helps gases escape and ensures solidification in critical areas." },
+                    { q: "Small auxiliary sprues (vents) are recommended to improve casting of:", o: ["Thick patterns", "Thin patterns", "Metal frameworks only", "Ceramic only"], c: "Thin patterns", e: "Vents recommended to improve casting of thin patterns." },
+                    { q: "A sprue reservoir is a bulbous or thickened section of the sprue that functions to:", o: ["Hold wax", "Prevent back pressure porosity", "Increase casting speed", "Reduce metal use"], c: "Prevent back pressure porosity", e: "Sprue reservoir prevents back pressure porosity by acting as molten metal reservoir." },
+                    { q: "The crucible former is attached to the sprue and is usually made of:", o: ["Metal", "Rubber", "Wax", "Plastic"], c: "Rubber", e: "Crucible former is usually made of rubber." },
+                    { q: "The crucible former provides:", o: ["Investment strength", "A funnel to facilitate molten alloy entrance", "Wax escape path", "Casting ring support"], c: "A funnel to facilitate molten alloy entrance", e: "Crucible former provides a funnel to facilitate molten alloy entrance." },
+                    { q: "The casting ring holds investment in place AND:", o: ["Prevents all expansion", "Restricts expansion", "Increases wax flow", "Reduces metal temperature"], c: "Restricts expansion", e: "Casting ring holds investment and restricts expansion." },
+                    { q: "The ring liner allows hygroscopic expansion AND:", o: ["Prevents venting", "Provides venting and facilitates removal of investment", "Increases shrinkage", "Reduces accuracy"], c: "Provides venting and facilitates removal of investment", e: "Ring liner allows hygroscopic expansion, provides venting, facilitates removal." },
+                    { q: "The ring liner directs expansion:", o: ["Inward", "Outward", "Vertically only", "No direction"], c: "Outward", e: "Ring liner directs expansion outward." },
+                    { q: "The ringless investment technique uses which type of investment?", o: ["Gypsum-bonded investment", "Higher strength phosphate-bonded investment", "Plaster", "Silica-free investment"], c: "Higher strength phosphate-bonded investment", e: "Ringless technique uses higher strength phosphate-bonded investment." },
+                    { q: "The ringless investment technique is designed to allow unrestricted expansion for alloys with:", o: ["Low melting temperature", "Higher melting temperature", "No expansion needs", "Plastic components"], c: "Higher melting temperature", e: "Allows unrestricted expansion for alloys with higher melting temperature." },
+                    { q: "The ringless technique compensates for:", o: ["High expansion", "High shrinkage", "Low strength", "Poor detail"], c: "High shrinkage", e: "Designed to compensate for high shrinkage." },
+                    { q: "Double spruing means:", o: ["One sprue only", "Two sprues used", "No sprue", "Hollow sprue"], c: "Two sprues used", e: "Double spruing uses two sprues." },
+                    { q: "Multiple spruing is used for:", o: ["Single crowns", "Multiple restorations or complex patterns", "Simple inlays", "All wax patterns"], c: "Multiple restorations or complex patterns", e: "Multiple spruing for multiple restorations or complex patterns." },
+                    { q: "A hollow plastic sprue may still cause wax overheating issues because it softens at:", o: ["Lower temperature than wax", "Higher temperature than wax", "Same temperature as wax", "No temperature change"], c: "Higher temperature than wax", e: "Plastic sprues soften at higher temperature than wax." },
+                    { q: "When a metal sprue is removed, small investment particles may cause incomplete casting if they are:", o: ["Large", "Undetectable", "Colored", "Wet"], c: "Undetectable", e: "Incomplete casting if particles are undetectable." },
+                    { q: "The sprue channel allows which two materials to pass?", o: ["Water and air", "Molten wax and molten metal", "Investment and gypsum", "Plaster and stone"], c: "Molten wax and molten metal", e: "Sprue channel allows molten wax escape and molten metal entry." },
+                    { q: "Back pressure porosity is caused by:", o: ["Too long sprue", "Trapped gases unable to escape (short sprue)", "Too large diameter sprue", "Metal overheating"], c: "Trapped gases unable to escape (short sprue)", e: "Back pressure porosity from trapped gases with short sprue." }
+                ]
+            },
+            {
+                id: 3,
+                title: "Wax Pattern & Inlay Wax",
+                desc: "Inlay wax properties, types, PKT instruments, and occlusal anatomy build-up.",
+                questions: [
+                    { q: "A wax pattern is defined as:", o: ["A metal copy of a crown", "A wax form that is the positive likeness of a crown to be fabricated", "An impression material", "A type of gypsum"], c: "A wax form that is the positive likeness of a crown to be fabricated", e: "Wax pattern: a wax form that is the positive likeness of a crown to be fabricated." },
+                    { q: "Which wax pattern fabrication technique is the MOST popular?", o: ["Direct technique", "Indirect technique", "Indirect-direct technique", "Dipping method"], c: "Indirect technique", e: "Indirect Technique (Most popular)." },
+                    { q: "In the direct technique, the wax pattern is waxed on:", o: ["A stone cast", "The prepared tooth in the patient's mouth", "A metal die", "An impression"], c: "The prepared tooth in the patient's mouth", e: "Direct technique: pattern waxed on prepared tooth in patient's mouth." },
+                    { q: "In the indirect technique, the wax pattern is waxed on:", o: ["The prepared tooth in the mouth", "A stone cast made from an impression of the prepared tooth", "A metal die only", "An alginate impression"], c: "A stone cast made from an impression of the prepared tooth", e: "Indirect technique: pattern waxed on stone cast from impression." },
+                    { q: "Which is an advantage of the indirect wax pattern technique?", o: ["More chair-side time", "Less chair-side time and better visualization", "More patient discomfort", "Less accurate"], c: "Less chair-side time and better visualization", e: "Indirect technique advantages: less chair-side time, better visualization, ready access to margins." },
+                    { q: "Inlay casting wax is used for:", o: ["Only direct techniques", "All wax patterns", "Only metal frameworks", "Only ceramic restorations"], c: "All wax patterns", e: "Inlay casting wax is used for all wax patterns." },
+                    { q: "Inlay wax is composed of paraffin (40-60%) and which other components?", o: ["Only paraffin", "Dammar resin, carnauba, ceresin, candelilla wax, and dyes", "Only carnauba wax", "Metal particles"], c: "Dammar resin, carnauba, ceresin, candelilla wax, and dyes", e: "Composition: paraffin, dammar resin, carnauba resin, ceresin, candelilla wax, dyes." },
+                    { q: "Dammar resin is added to inlay wax to:", o: ["Raise melting temperature", "Reduce flaking", "Add color", "Increase hardness"], c: "Reduce flaking", e: "Dammar resin reduces flaking." },
+                    { q: "Carnauba resin, ceresin, and candelilla wax are added to inlay wax to:", o: ["Reduce flaking", "Raise the melting temperature", "Add color contrast", "Increase flow"], c: "Raise the melting temperature", e: "Carnauba resin, ceresin, candelilla wax raise the melting temperature." },
+                    { q: "Type I inlay wax is formulated for:", o: ["Extraoral wax patterns", "Intraoral wax patterns", "Metal casting only", "Ceramic restorations"], c: "Intraoral wax patterns", e: "Type I wax: formulated for making intraoral wax patterns." },
+                    { q: "Type II inlay wax is formulated for:", o: ["Intraoral wax patterns", "Extraoral wax patterns", "Direct technique only", "Only anterior teeth"], c: "Extraoral wax patterns", e: "Type II wax: formulated for making extraoral wax patterns." },
+                    { q: "Type II inlay wax is softer and has a slightly lower melting point than:", o: ["Type I", "Type III", "Type IV", "All types"], c: "Type I", e: "Type II: softer wax, slightly lower melting point than Type I." },
+                    { q: "A good inlay wax must flow readily when heated without:", o: ["Melting", "Chipping or flaking", "Changing color", "Hardening"], c: "Chipping or flaking", e: "Good inlay wax flows readily when heated without chipping or flaking." },
+                    { q: "A good inlay wax must be rigid when cooled to allow:", o: ["Easy melting", "Carving without distortion or smearing", "Faster setting", "Better color"], c: "Carving without distortion or smearing", e: "Rigid when cooled → can be carved precisely without distortion or smearing." },
+                    { q: "A good inlay wax must have a distinguishable color from the stone die to:", o: ["Look attractive", "Provide clear margin visibility", "Reduce cost", "Speed melting"], c: "Provide clear margin visibility", e: "Distinguishable color from stone die for clear margin visibility." },
+                    { q: "A good inlay wax must be completely vaporized without leaving debris to:", o: ["Save time", "Prevent casting defects", "Reduce cost", "Improve color"], c: "Prevent casting defects", e: "Completely vaporized without debris to prevent casting defects." },
+                    { q: "Minimum stress relaxation after carving and before investing is required to prevent:", o: ["Wax expansion", "Distortion", "Color change", "Hardening"], c: "Distortion", e: "Minimum stress relaxation prevents distortion." },
+                    { q: "Which is a method of wax pattern construction?", o: ["Grinding method", "Dipping method", "Cutting method", "Pressing method only"], c: "Dipping method", e: "Methods: Dipping method, Addition method, Molten press method." },
+                    { q: "PKT waxing instruments No. 1 and 2 are used as:", o: ["Wax carvers", "Wax addition instruments", "Burnishers", "Spatulas for large wax amounts"], c: "Wax addition instruments", e: "No 1,2: Wax addition instrument." },
+                    { q: "PKT waxing instrument No. 3 is a burnisher used for:", o: ["Adding wax", "Refining occlusal anatomy", "Carving margins", "Trimming proximal surfaces"], c: "Refining occlusal anatomy", e: "No 3: Burnisher for refining occlusal anatomy." },
+                    { q: "PKT waxing instruments No. 4 and 5 are used as:", o: ["Wax addition instruments", "Wax carvers", "Burnishers", "Spatulas"], c: "Wax carvers", e: "No 4,5: Wax carvers." },
+                    { q: "The wax spatula is used for:", o: ["Carving fine details", "Adding large amount of wax", "Burnishing margins", "Trimming excess wax"], c: "Adding large amount of wax", e: "Wax spatula used for adding large amount of wax." },
+                    { q: "The first step in wax pattern construction is:", o: ["Adding occlusal wax", "Internal surface waxing with die lubricant", "Proximal surface shaping", "Margin finishing"], c: "Internal surface waxing with die lubricant", e: "Steps: Internal surface (die lubricant first) → Proximal → Axial → Occlusal → Margin finishing." },
+                    { q: "Proximal areas require extra wax bulk to:", o: ["Save material", "Provide grip and prevent distortion during removal", "Reduce weight", "Speed carving"], c: "Provide grip and prevent distortion during removal", e: "Proximal areas extra bulk for grip and prevent distortion." },
+                    { q: "Anterior contact areas are described as:", o: ["Broad and centrally located", "Narrow and incisally located", "Wide and gingival", "Circular and occlusal"], c: "Narrow and incisally located", e: "Anterior contact areas: narrow and incisally." },
+                    { q: "Posterior contact areas are described as:", o: ["Narrow and incisal", "Broad and centrally located", "Gingival only", "Buccal only"], c: "Broad and centrally located", e: "Posterior contact areas: broad and centrally." },
+                    { q: "Lingual embrasures are wider than buccal embrasures to:", o: ["Trap food", "Allow food deflection", "Increase retention", "Reduce strength"], c: "Allow food deflection", e: "Lingual embrasures wider than buccal to allow food deflection." },
+                    { q: "Gingival embrasures should be:", o: ["Asymmetric", "Symmetric", "Wide on buccal only", "Narrow on lingual only"], c: "Symmetric", e: "Gingival embrasures: symmetric." },
+                    { q: "Too narrow a contact causes:", o: ["Food impaction", "Wedging of fibrous food between teeth", "Perfect hygiene", "No problems"], c: "Wedging of fibrous food between teeth", e: "Too narrow contact → wedging of fibrous food between teeth." },
+                    { q: "Too broad a contact causes:", o: ["Food impaction and no deflection", "Easy flossing", "Better contacts", "Reduced caries"], c: "Food impaction and no deflection", e: "Too broad contact → food impaction and no deflection." },
+                    { q: "Buccal height of contour for anterior teeth is:", o: ["0.5 mm from CEJ", "0.75 mm from CEJ", "1 mm from CEJ", "1.5 mm from CEJ"], c: "0.5 mm from CEJ", e: "Anterior buccal height of contour: 0.5 mm from CEJ." },
+                    { q: "Buccal height of contour for premolars is:", o: ["0.5 mm from CEJ", "0.75 mm from CEJ", "1 mm from CEJ", "1.5 mm from CEJ"], c: "0.75 mm from CEJ", e: "Premolar buccal height of contour: 0.75 mm from CEJ." },
+                    { q: "Buccal height of contour for molars is:", o: ["0.5 mm from CEJ", "0.75 mm from CEJ", "1 mm from CEJ", "1.5 mm from CEJ"], c: "1 mm from CEJ", e: "Molar buccal height of contour: 1 mm from CEJ." },
+                    { q: "Lingual height of contour for premolars and molars is located at:", o: ["Cervical third", "Middle third of the lingual surface", "Occlusal third", "Gingival margin"], c: "Middle third of the lingual surface", e: "Lingual height of contour: middle 1/3 of lingual surface." },
+                    { q: "Overcontouring causes:", o: ["Food trauma", "Food impaction and gingival inflammation", "Gingival recession", "Perfect health"], c: "Food impaction and gingival inflammation", e: "Overcontouring → food impaction and gingival inflammation." },
+                    { q: "Undercontouring causes:", o: ["Food impaction", "Food trauma and gingival recession", "No effect", "Plaque retention"], c: "Food trauma and gingival recession", e: "Undercontouring → food trauma and gingival recession." },
+                    { q: "Nonfunctional cusps form a rim to protect buccal mucosa and tongue AND:", o: ["Increase occlusal force", "Prevent food escape", "Reduce crown height", "Improve esthetics only"], c: "Prevent food escape", e: "Nonfunctional cusps protect mucosa/tongue AND prevent food escape." },
+                    { q: "The occlusal anatomy build-up sequence begins with:", o: ["Marginal ridges", "Cone placement", "Triangular ridges", "Cuspal ridges"], c: "Cone placement", e: "Sequence: Cone placement → Cuspal ridges → Cones, cuspal, triangular ridges → Secondary and marginal ridges." },
+                    { q: "Contacts should occur on the sides of the cone near the tip, NOT on the tip itself, to:", o: ["Increase wear", "Decrease wear of cusp", "Improve esthetics", "Reduce strength"], c: "Decrease wear of cusp", e: "Contact on sides (not tip) decreases wear of cusp." },
+                    { q: "The Curve of Spee runs from mandibular canine to:", o: ["Central incisor", "Anterior border of the ramus", "Maxillary tuberosity", "Condyle"], c: "Anterior border of the ramus", e: "Curve of Spee: from mandibular canine to anterior border of ramus." },
+                    { q: "The Curve of Spee prevents:", o: ["Lateral interference", "Protrusive interference", "Centric interference", "All movement"], c: "Protrusive interference", e: "Curve of Spee prevents protrusive interference." },
+                    { q: "The Curve of Wilson is between buccal cusp tips of right and left mandibular molars and prevents:", o: ["Protrusive interference", "Lateral interference", "Vertical interference", "All occlusal contact"], c: "Lateral interference", e: "Curve of Wilson prevents lateral interference." },
+                    { q: "In cusp-fossa arrangement, each functional cusp contacts the opposing fossa at how many points?", o: ["One point", "Two points", "Three points (tripod contact)", "Four points"], c: "Three points (tripod contact)", e: "Cusp-fossa: centric cusps contact occlusal fossa at three points (tripod)." },
+                    { q: "Tooth-to-two-teeth arrangement is found in what percentage of adults?", o: ["25%", "50%", "75%", "90%"], c: "90%", e: "Tooth-to-two-teeth arrangement found in 90% of adults." },
+                    { q: "Marginal finishing aims to minimize dissolution of cement AND:", o: ["Increase plaque retention", "Facilitate plaque control", "Reduce marginal fit", "Increase cement thickness"], c: "Facilitate plaque control", e: "Marginal finishing objectives: minimize cement dissolution, facilitate plaque control." }
+                ]
+            },
+            {
+                id: 4,
+                title: "CAD/CAM & Virtual Casts/Dies",
+                desc: "Digital workflows, virtual dies, advantages/limitations of digital vs conventional casts.",
+                questions: [
+                    { q: "A virtual working cast is defined as:", o: ["A plastic model of teeth", "A 3D digital model representing prepared teeth, adjacent teeth, and gingival tissues", "A scanned impression only", "A 2D image of the arch"], c: "A 3D digital model representing prepared teeth, adjacent teeth, and gingival tissues", e: "Virtual working cast: 3D digital model of prepared teeth, adjacent teeth, and gingival tissues." },
+                    { q: "Virtual working casts are created using:", o: ["Alginate and stone", "Scanning technology", "Rubber base and plaster", "Electroplating"], c: "Scanning technology", e: "Created using scanning technology instead of traditional gypsum." },
+                    { q: "A virtual die is defined as:", o: ["A digital reproduction of the entire arch", "A digital reproduction of an individual prepared tooth", "A scanned impression of opposing arch", "A digital wax pattern"], c: "A digital reproduction of an individual prepared tooth", e: "Virtual die: digital reproduction of an individual prepared tooth, separated from virtual cast." },
+                    { q: "Virtual dies are used for margin identification, restoration design, AND:", o: ["Patient billing", "Evaluation of contours and contacts", "Laboratory management", "Impression taking"], c: "Evaluation of contours and contacts", e: "Virtual die uses: margin identification, restoration design, evaluation of contours and contacts." },
+                    { q: "In traditional workflow, working casts are made from:", o: ["Digital scans", "Conventional impressions and stone", "3D prints only", "Wax only"], c: "Conventional impressions and stone", e: "Traditional workflow: conventional impressions, stone working casts, sectioned dies." },
+                    { q: "In digital workflow, conventional impressions are replaced by:", o: ["Stone casts", "Digital scanning", "Rubber impressions", "Alginate"], c: "Digital scanning", e: "Digital workflow uses digital impressions via scanning." },
+                    { q: "CAD stands for:", o: ["Computer Aided Dentistry", "Computer Aided Design", "Crown and Die", "Casting and Design"], c: "Computer Aided Design", e: "CAD: Computer Aided Design." },
+                    { q: "CAM stands for:", o: ["Computer Aided Manufacturing", "Crown and Margin", "Casting and Milling", "Computer Aided Medicine"], c: "Computer Aided Manufacturing", e: "CAM: Computer Aided Manufacturing." },
+                    { q: "CAD is used to:", o: ["Take digital impressions", "Design dental restorations digitally", "Mill the restoration", "Polish the crown"], c: "Design dental restorations digitally", e: "CAD: design dental restorations digitally." },
+                    { q: "CAM is used to:", o: ["Design the restoration", "Manufacture restorations automatically using milling or 3D printing", "Take impressions", "Trim dies"], c: "Manufacture restorations automatically using milling or 3D printing", e: "CAM: manufacture automatically using milling or 3D printing." },
+                    { q: "The input unit of a CAD/CAM system is a scanner used to:", o: ["Design the restoration", "Take digital impressions", "Mill the crown", "Polish the restoration"], c: "Take digital impressions", e: "Input unit (scanner): used to take digital impressions for teeth and soft tissues." },
+                    { q: "Intraoral scanners scan directly:", o: ["Casts outside the mouth", "Teeth and soft tissues in the mouth", "Impressions only", "Wax patterns only"], c: "Teeth and soft tissues in the mouth", e: "Intraoral scanners: scan teeth & soft tissues directly in the mouth." },
+                    { q: "Extraoral scanners scan:", o: ["Directly in the mouth", "Casts or impressions outside the mouth", "Only stone dies", "Only wax patterns"], c: "Casts or impressions outside the mouth", e: "Extraoral scanners: scan casts or impressions outside the mouth." },
+                    { q: "The software (CAD) in CAD/CAM is responsible for designing the restoration digitally AND:", o: ["Taking impressions", "Adjusting occlusion and contacts", "Milling the crown", "Polishing"], c: "Adjusting occlusion and contacts", e: "CAD phase includes designing restoration AND adjusting occlusion and contacts." },
+                    { q: "The output unit (CAM) fabricates the restoration using:", o: ["Hand carving", "Milling unit or 3D printer", "Stone casting", "Wax dipping"], c: "Milling unit or 3D printer", e: "Output unit (CAM): fabricates using milling unit or 3D printer." },
+                    { q: "Step 1 of CAD/CAM is data acquisition, which means:", o: ["Milling the crown", "Digital impression via intraoral or extraoral scanning", "Polishing the restoration", "Cementation"], c: "Digital impression via intraoral or extraoral scanning", e: "Step 1 – Data Acquisition: digital impression via intraoral or extraoral scanning." },
+                    { q: "Step 2 of CAD/CAM (Design Phase) includes die trimming, marking margins, designing restoration, AND:", o: ["Milling", "Adjusting occlusion and contacts", "Polishing", "Cementation"], c: "Adjusting occlusion and contacts", e: "Step 2 – Design Phase: die trimming, marking margin, design restoration, adjust occlusion and contacts." },
+                    { q: "Step 3 of CAD/CAM (Manufacturing Phase) sends the design file to:", o: ["The patient", "A milling unit or 3D printer", "The dentist for approval", "The stone cast"], c: "A milling unit or 3D printer", e: "Step 3 – Manufacturing Phase: design file sent to milling unit or 3D printer." },
+                    { q: "Step 4 of CAD/CAM (Finishing) includes polishing, staining, glazing, AND:", o: ["Impression taking", "Cementation in the patient's mouth", "Digital scanning", "Die trimming"], c: "Cementation in the patient's mouth", e: "Step 4 – Finishing: polishing, staining, glazing, and cementation in patient's mouth." },
+                    { q: "Virtual die ditching is defined as:", o: ["Adding virtual material to the margin", "Digital process of removing excess virtual material around the finish line", "Strengthening the digital die", "Coloring the die for contrast"], c: "Digital process of removing excess virtual material around the finish line", e: "Virtual die ditching: digital process of removing excess virtual material around finish line." },
+                    { q: "The purpose of virtual die ditching is accurate margin visualization AND:", o: ["Faster milling", "Proper restoration fit", "Lower cost", "Better color"], c: "Proper restoration fit", e: "Purpose: accurate margin visualization and proper restoration fit." },
+                    { q: "Which is an advantage of digital ditching over conventional ditching?", o: ["Faster but less accurate", "No risk of damaging margins and reversible/editable", "Requires less training", "Cheaper equipment"], c: "No risk of damaging margins and reversible/editable", e: "Digital ditching advantages: no risk of damaging margins, reversible, editable, highly precise." },
+                    { q: "Which is an advantage of virtual casts regarding accuracy?", o: ["More distortion than conventional", "No distortion from impression materials or dimensional change of stone", "Same accuracy as conventional", "Less accurate than conventional"], c: "No distortion from impression materials or dimensional change of stone", e: "Advantage: no distortion from impression materials or dimensional change of stone." },
+                    { q: "Virtual casts save physical space because:", o: ["They are smaller", "Digital files save physical storage space", "They are disposable", "They can be stacked"], c: "Digital files save physical storage space", e: "Advantage: digital files save physical space." },
+                    { q: "Virtual casts allow easy communication between:", o: ["Patient and dentist only", "Clinic and laboratory", "Two patients", "Two laboratories only"], c: "Clinic and laboratory", e: "Advantage: easy sharing between clinic and lab." },
+                    { q: "Virtual casts have no chipping, wear, or breakage because:", o: ["They are made of metal", "They are digital files", "They are stored carefully", "They are disposable"], c: "They are digital files", e: "Advantage: durability – no chipping, wear, or breakage." },
+                    { q: "Which is a limitation of virtual casts?", o: ["Low accuracy", "High initial cost", "Cannot be shared", "More distortion"], c: "High initial cost", e: "Limitations: high initial cost, need for training, learning curve, dependence on scanning quality." },
+                    { q: "Virtual casts require training and have a:", o: ["Low initial cost", "Learning curve", "No setup time", "Simple operation for all"], c: "Learning curve", e: "Limitations include learning curve." },
+                    { q: "Virtual cast quality depends on:", o: ["Laboratory technician skill only", "Scanning quality", "Patient cooperation only", "Stone quality"], c: "Scanning quality", e: "Limitation: dependence on scanning quality." },
+                    { q: "Conventional casts can be scratched or fractured, while virtual casts are:", o: ["Also fracturable", "Permanent digital files", "Less durable", "Made of stone"], c: "Permanent digital files", e: "Virtual casts: permanent digital files with no physical wear." },
+                    { q: "Conventional casts require shipping, while virtual casts:", o: ["Also require shipping", "Do not require shipping", "Require special shipping", "Cannot be shipped"], c: "Do not require shipping", e: "Conventional: shipping required. Virtual: not required." },
+                    { q: "Editing is impossible on conventional casts, while virtual casts allow:", o: ["No editing", "Easy editing", "Difficult editing", "Only deletion"], c: "Easy editing", e: "Conventional: editing impossible. Virtual: easy editing." },
+                    { q: "Conventional casts are made of gypsum or resin, while virtual casts are made of:", o: ["Stone", "Digital file", "Metal", "Plaster"], c: "Digital file", e: "Conventional: gypsum or resin. Virtual: digital file." },
+                    { q: "Distortion is possible in conventional casts but in virtual casts distortion is:", o: ["More common", "Minimal", "Always present", "Never present"], c: "Minimal", e: "Conventional: distortion possible. Virtual: minimal." },
+                    { q: "Ditching is defined as trimming excess stone around the margin to:", o: ["Add material", "Clearly expose the finish line", "Strengthen the die", "Color the margin"], c: "Clearly expose the finish line", e: "Ditching: trimming excess stone around margin to clearly expose finish line." },
+                    { q: "The purpose of ditching is to identify margins, allow accurate wax pattern fabrication, AND:", o: ["Speed up work", "Prevent over-contoured or under-extended margins", "Reduce cost", "Improve color"], c: "Prevent over-contoured or under-extended margins", e: "Ditching purpose: identify margins, allow accurate wax pattern, prevent over/under-extended margins." },
+                    { q: "Die spacer is painted on the prepared tooth EXCEPT:", o: ["The occlusal surface", "The finish line and 1 mm above it", "The axial walls", "The proximal surfaces"], c: "The finish line and 1 mm above it", e: "Die spacer applied everywhere except finish line and 1 mm above it." },
+                    { q: "Die spacer total thickness is:", o: ["5-10 microns", "20-40 microns", "50-100 microns", "100-200 microns"], c: "20-40 microns", e: "Die spacer thickness: 20-40 microns depending on cement type." },
+                    { q: "The purpose of die spacer is to provide space for cement AND:", o: ["Increase die strength", "Improve seating of the restoration", "Reduce wax flow", "Speed carving"], c: "Improve seating of the restoration", e: "Die spacer purpose: provide space for cement and improve seating of restoration." },
+                    { q: "Applying too many layers of die spacer results in:", o: ["Open margin", "Loose crown", "Incomplete seating", "Tight crown"], c: "Loose crown", e: "Too many die spacer layers → loose crown." },
+                    { q: "Applying die spacer too close to the margin results in:", o: ["Loose crown", "Open margin", "Tight crown", "Cement washout"], c: "Open margin", e: "Die spacer too close to margin → open margin." },
+                    { q: "Uneven application of die spacer causes:", o: ["Perfect fit", "Incomplete seating", "Increased strength", "Better retention"], c: "Incomplete seating", e: "Uneven die spacer application → incomplete seating." },
+                    { q: "A digital wax pattern is designed using:", o: ["Stone and wax", "CAD software", "Manual carving only", "Alginate impressions"], c: "CAD software", e: "Digital wax pattern: designed using CAD software." },
+                    { q: "An advantage of digital wax pattern over conventional is:", o: ["Less accurate", "Time-saving and easily reproducible", "More technique sensitive", "Cannot be stored"], c: "Time-saving and easily reproducible", e: "Digital wax pattern advantages: time-saving, easy modifications, reproducibility, digital storage." },
+                    { q: "Digital wax pattern workflow includes digital impression, CAD design, AND:", o: ["Stone casting", "Casting (lost-wax casting or ceramic pressing)", "Hand carving", "Alginate impression"], c: "Casting (lost-wax casting or ceramic pressing)", e: "Digital wax pattern workflow: digital impression → CAD design → casting (lost-wax or ceramic pressing)." }
+                ]
+            }
+        ];
+
+        /* --- APP STATE --- */
+        let appState = {
+            activeLectureId: null,
+            currentQuestionIndex: 0,
+            score: 0,
+            answers: {}, // { qIndex: 'correct' | 'wrong' }
+            timeLeft: 60,
+            timerInterval: null
+        };
+
+        // DOM Elements
+        const homeView = document.getElementById('home-view');
+        const quizView = document.getElementById('quiz-view');
+        const lecturesGrid = document.getElementById('lectures-grid');
+        const btnBack = document.getElementById('btn-back');
+        
+        // Quiz Elements
+        const elLectureLabel = document.getElementById('lecture-label');
+        const elQuestionNum = document.getElementById('question-number');
+        const elQuestionText = document.getElementById('question-text');
+        const elOptionsContainer = document.getElementById('options-container');
+        const elExplanationBox = document.getElementById('explanation-box');
+        const elExplanationText = document.getElementById('explanation-text');
+        const elTimer = document.getElementById('timer-display');
+        const elScore = document.getElementById('score-display');
+        const elProgressBar = document.getElementById('progress-bar');
+        const elNavGrid = document.getElementById('nav-grid');
+
+        /* --- INITIALIZATION --- */
+        function init() {
+            renderHomeGrid();
+        }
+
+        /* --- HOME SCREEN LOGIC --- */
+        function renderHomeGrid() {
+            lecturesGrid.innerHTML = '';
+            lecturesData.forEach(lec => {
+                const savedState = getSavedState(lec.id);
+                const progress = savedState ? Object.keys(savedState.answers).length : 0;
+                const score = savedState ? savedState.score : 0;
+                
+                const card = document.createElement('div');
+                card.className = 'lecture-card';
+                card.onclick = () => startLecture(lec.id);
+                card.innerHTML = `
+                    <div class="lecture-number">${lec.id}</div>
+                    <div>
+                        <div class="lecture-title">${lec.title}</div>
+                        <div class="lecture-desc">${lec.desc}</div>
+                    </div>
+                    <div class="lecture-status">
+                        ${progress > 0 ? `Progress: ${progress}/45 | Score: ${score}` : 'Start Quiz'}
+                    </div>
+                `;
+                lecturesGrid.appendChild(card);
+            });
+        }
+
+        /* --- QUIZ LOGIC --- */
+        function getStorageKey(lectureId) {
+            return `fixMastery_L${lectureId}`;
+        }
+
+        function getSavedState(lectureId) {
+            const key = getStorageKey(lectureId);
+            const saved = localStorage.getItem(key);
+            return saved ? JSON.parse(saved) : null;
+        }
+
+        function saveCurrentState() {
+            if (!appState.activeLectureId) return;
+            const key = getStorageKey(appState.activeLectureId);
+            localStorage.setItem(key, JSON.stringify({
+                currentQuestionIndex: appState.currentQuestionIndex,
+                score: appState.score,
+                answers: appState.answers
+            }));
+        }
+
+        function startLecture(id) {
+            appState.activeLectureId = id;
+            const saved = getSavedState(id);
+            
+            if (saved) {
+                appState.currentQuestionIndex = saved.currentQuestionIndex;
+                appState.score = saved.score;
+                appState.answers = saved.answers;
+            } else {
+                // Reset state for new lecture
+                appState.currentQuestionIndex = 0;
+                appState.score = 0;
+                appState.answers = {};
+            }
+
+            // UI Transition
+            homeView.classList.remove('active-view');
+            quizView.classList.add('active-view');
+            btnBack.classList.remove('hidden');
+
+            loadQuestion(appState.currentQuestionIndex);
+            updateScoreDisplay();
+            renderNavGrid();
+        }
+
+        function goHome() {
+            clearInterval(appState.timerInterval);
+            saveCurrentState();
+            quizView.classList.remove('active-view');
+            homeView.classList.add('active-view');
+            btnBack.classList.add('hidden');
+            renderHomeGrid(); // Update progress cards
+            appState.activeLectureId = null;
+        }
+
+        function getCurrentQuestions() {
+            const lec = lecturesData.find(l => l.id === appState.activeLectureId);
+            return lec ? lec.questions : [];
+        }
+
+        function loadQuestion(index) {
+            const questions = getCurrentQuestions();
+            if (index < 0 || index >= questions.length) return;
+
+            appState.currentQuestionIndex = index;
+            const data = questions[index];
+
+            // Header
+            elLectureLabel.textContent = `Lecture ${appState.activeLectureId}`;
+            elQuestionNum.textContent = `Q${index + 1}`;
+            elQuestionText.textContent = data.q;
+
+            // Reset
+            elExplanationBox.style.display = 'none';
+            elOptionsContainer.innerHTML = '';
+
+            // Randomize Options
+            const optionObjects = data.o.map(opt => ({
+                text: opt,
+                isCorrect: opt === data.c
+            }));
+            const shuffledOptions = shuffleArray(optionObjects);
+
+            // Render Buttons
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt.text;
+                btn.onclick = () => handleAnswer(btn, opt.isCorrect, data.e);
+                elOptionsContainer.appendChild(btn);
+            });
+
+            // Restore State if answered
+            const answerStatus = appState.answers[index];
+            if (answerStatus) {
+                const isCorrect = answerStatus === 'correct';
+                const buttons = elOptionsContainer.querySelectorAll('.option-btn');
+                buttons.forEach(b => {
+                    b.disabled = true;
+                    if (b.textContent === data.c) b.classList.add('correct');
+                    if (!isCorrect && b.textContent !== data.c && b.classList.contains('correct') === false) {
+                        // If user answered wrong, we could visually mark their choice if we stored the specific text,
+                        // but simpler to just show correct answer and explanation.
+                    }
+                });
+                elExplanationText.textContent = data.e;
+                elExplanationBox.style.display = 'block';
+                
+                // Visual cue on card
+                document.getElementById('question-card').style.borderTopColor = isCorrect ? 'var(--primary-green)' : 'var(--error-red)';
+            } else {
+                document.getElementById('question-card').style.borderTopColor = 'var(--primary-green)';
+            }
+
+            // Progress
+            const progress = ((index + 1) / questions.length) * 100;
+            elProgressBar.style.width = `${progress}%`;
+            updateNavGrid();
+
+            // Timer
+            startTimer();
+        }
+
+        function handleAnswer(btnElement, isCorrect, explanation) {
+            if (appState.answers[appState.currentQuestionIndex]) return;
+            clearInterval(appState.timerInterval);
+
+            const buttons = elOptionsContainer.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                btnElement.classList.add('correct');
+                appState.score++;
+                appState.answers[appState.currentQuestionIndex] = 'correct';
+            } else {
+                btnElement.classList.add('wrong');
+                const currentQ = getCurrentQuestions()[appState.currentQuestionIndex];
+                buttons.forEach(b => {
+                    if (b.textContent === currentQ.c) b.classList.add('correct');
+                });
+                appState.answers[appState.currentQuestionIndex] = 'wrong';
+                document.getElementById('question-card').style.borderTopColor = 'var(--error-red)';
+            }
+
+            elExplanationText.textContent = explanation;
+            elExplanationBox.style.display = 'block';
+            
+            saveCurrentState();
+            updateScoreDisplay();
+            updateNavGrid();
+        }
+
+        function startTimer() {
+            clearInterval(appState.timerInterval);
+            appState.timeLeft = 60;
+            updateTimerDisplay();
+
+            appState.timerInterval = setInterval(() => {
+                appState.timeLeft--;
+                updateTimerDisplay();
+                if (appState.timeLeft <= 0) {
+                    clearInterval(appState.timerInterval);
+                    handleTimeUp();
+                }
+            }, 1000);
+        }
+
+        function handleTimeUp() {
+            if (!appState.answers[appState.currentQuestionIndex]) {
+                appState.answers[appState.currentQuestionIndex] = 'wrong';
+                saveCurrentState();
+                updateNavGrid();
+                updateScoreDisplay();
+                
+                // Show answer
+                const currentQ = getCurrentQuestions()[appState.currentQuestionIndex];
+                const buttons = elOptionsContainer.querySelectorAll('.option-btn');
+                buttons.forEach(b => {
+                    b.disabled = true;
+                    if (b.textContent === currentQ.c) b.classList.add('correct');
+                });
+                elExplanationText.textContent = "Time's Up! " + currentQ.e;
+                elExplanationBox.style.display = 'block';
+                document.getElementById('question-card').style.borderTopColor = 'var(--error-red)';
+            }
+        }
+
+        /* --- NAVIGATION GRID --- */
+        function renderNavGrid() {
+            const questions = getCurrentQuestions();
+            elNavGrid.innerHTML = '';
+            questions.forEach((_, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'nav-btn';
+                btn.textContent = idx + 1;
+                btn.onclick = () => {
+                    if (appState.currentQuestionIndex !== idx) loadQuestion(idx);
+                };
+                elNavGrid.appendChild(btn);
+            });
+            updateNavGrid();
+        }
+
+        function updateNavGrid() {
+            const btns = elNavGrid.querySelectorAll('.nav-btn');
+            btns.forEach((btn, idx) => {
+                btn.className = 'nav-btn';
+                if (idx === appState.currentQuestionIndex) btn.classList.add('active');
+                if (appState.answers[idx] === 'correct') btn.classList.add('correct-answered');
+                if (appState.answers[idx] === 'wrong') btn.classList.add('wrong-answered');
+            });
+        }
+
+        /* --- UTILS --- */
+        function updateTimerDisplay() {
+            const m = Math.floor(appState.timeLeft / 60).toString().padStart(2, '0');
+            const s = (appState.timeLeft % 60).toString().padStart(2, '0');
+            elTimer.textContent = `${m}:${s}`;
+            elTimer.className = appState.timeLeft <= 10 ? 'timer-warning' : '';
+        }
+
+        function updateScoreDisplay() {
+            const total = getCurrentQuestions().length;
+            elScore.textContent = `${appState.score} / ${total}`;
+        }
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Start
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
